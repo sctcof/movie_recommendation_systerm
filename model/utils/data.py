@@ -358,4 +358,3 @@ def create_seq_features(data, seq_feature_col=['item_id', 'cate_id'], max_len=50
 
     return train, val, test
 
-
