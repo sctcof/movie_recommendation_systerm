@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推荐结果</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-film"></i> 电影推荐结果</h1>
+            <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        </header>
+
+        <div class="user-info">
+            <h2>用户信息</h2>
+            <div class="info-card">
+                <p><strong>用户ID:</strong> {{ user_info.user_id }}</p>
+                <p><strong>性别:</strong> {{ user_info.gender }}</p>
+                <p><strong>年龄:</strong> {{ user_info.age }}</p>
+                <p><strong>职业代码:</strong> {{ user_info.occupation }}</p>
+            </div>
+        </div>
+
+        <div class="recommendation-results">
+            <h2>个性化推荐</h2>
+
+            {% if not recommendations %}
+            <div class="no-results">
+                <p>没有找到推荐结果。该用户可能已经对所有电影进行了评分。</p>
+            </div>
+            {% else %}
+            <div class="movie-grid">
+                {% for movie in recommendations %}
+                <div class="movie-card">
+                    <div class="movie-rank">#{{ movie.rank }}</div>
+                    <div class="movie-title">{{ movie.title }}</div>
+                    <div class="movie-genres">{{ movie.genres }}</div>
+                    <div class="movie-rating">
+                        <span class="stars">
+                            {% for i in range(5) %}
+                                {% if i < movie.predicted_rating|round %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="rating-value">{{ movie.predicted_rating|round(1) }}/5.0</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="rating-distribution">
+                <h3>推荐评分分布</h3>
+                <div class="chart-container">
+                    <canvas id="ratingChart"></canvas>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 准备评分数据
+        const ratings = [
+            {% for movie in recommendations %}
+            {{ movie.predicted_rating }},
+            {% endfor %}
+        ];
+
+        // 准备标签
+        const labels = [
+            {% for movie in recommendations %}
+            "{{ movie.title|truncate(20) }}",
+            {% endfor %}
+        ];
+
+        // 创建柱状图
+        const ctx = document.getElementById('ratingChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '预测评分',
+                    data: ratings,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        title: {
+                            display: true,
+                            text: '评分 (0-5)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '电影名称'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
